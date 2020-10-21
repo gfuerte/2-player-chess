@@ -1,0 +1,43 @@
+1. I/O 
+-Scanning input
+	-> make sure anything that is inputed must be in correct format: (origin, destination) 
+		ex. "e2 e4"
+	-> if player wants to resign, they must input: "resign"
+
+-Output
+	->If a player attempts an illegal move on a piece, your program should not execute the move. 
+	Instead, it should print "Illegal move, try again", followed by the usual prompt (for white's move or black's move). 
+	->After each successful move, prints out the board followed by a prompt to show who's move is next: "White's move: "
+	-> If a move is made and it puts the opponent's move under check print: "Check"
+	-> If checkmate is detected print: "Checkmate"
+	-> Before termination, display game outcome: "Black wins", "White wins", "draw"
+
+2. Board Design
+bR bN bB bQ bK bB bN bR 8
+bp bp bp bp bp bp bp bp 7
+   ##    ##    ##    ## 6
+##    ##    ##    ##    5
+   ##    ##    ##    ## 4
+##    ##    ##    ##    3 
+wp wp wp wp wp wp wp wp 2
+wR wN wB wQ wK wB wN wR 1
+ a  b  c  d  e  f  g  h
+	
+3. Game mechanics
+-White always moves first
+-Pawn
+	-> Promotion
+	-> En Passsant
+	-> Diagonal Attacking
+-King
+	-> Castling
+	-> Avoiding Checks
+-Queen
+-Bishop
+-Knight
+-Rook
+	->Castling
+-Resigning 
+	
+4. Figure out how to do javadoc!
+
