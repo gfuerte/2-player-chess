@@ -1,7 +1,7 @@
 package models;
 
-public class Bishop extends Piece {
-	public Bishop(String name, String team) {
-		super(name, team);
+public class Bishop extends Tile {
+	public Bishop(String name, String team, boolean occupied) {
+		super(name, team, occupied);
 	}
 }

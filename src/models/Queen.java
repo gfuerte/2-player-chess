@@ -1,7 +1,7 @@
 package models;
 
-public class Queen extends Piece{
-	public Queen(String name, String team) {
-		super(name, team);
+public class Queen extends Tile{
+	public Queen(String name, String team, boolean occupied) {
+		super(name, team, occupied);
 	}
 }

@@ -1,9 +1,9 @@
 package models;
 
-public class King extends Piece {
+public class King extends Tile {
 	int[][] moves = {{}};
 	
-	public King(String name, String team) {
-		super(name, team);
+	public King(String name, String team, boolean occupied) {
+		super(name, team, occupied);
 	}
 }

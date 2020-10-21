@@ -1,7 +1,7 @@
 package models;
 
-public class Knight extends Piece {
-	public Knight(String name, String team) {
-		super(name, team);
+public class Knight extends Tile {
+	public Knight(String name, String team, boolean occupied) {
+		super(name, team, occupied);
 	}
 }
