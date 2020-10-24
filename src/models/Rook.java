@@ -9,7 +9,6 @@ public class Rook extends Tile {
             {5,0},
             {6,0},
             {7,0},
-            {8,0},
    
         	{-1,0},
             {-2,0},
@@ -18,7 +17,6 @@ public class Rook extends Tile {
             {-5,0},
             {-6,0},
             {-7,0},
-            {-8,0},
             
         	{0,1},
             {0,2},
@@ -27,7 +25,6 @@ public class Rook extends Tile {
             {0,5},
             {0,6},
             {0,7},
-            {0,8},
             
         	{0,-1},
             {0,-2},
@@ -35,14 +32,12 @@ public class Rook extends Tile {
             {0,-4},
             {0,-5},
             {0,-6},
-            {0,-7},
-            {0,-8},
-            
-            
-	                  };
+            {0,-7} };
 	
-	public Rook(String name, String team, boolean occupied) {
-		super(name, team, occupied);
+	public Rook(String boardName) {
+		super(boardName);
+		super.pieceName = "Rook";
+		super.moves = this.moves;
 	}
 	
 	public boolean validateMove(int[] origin, int[] destination) {

@@ -9,7 +9,6 @@ public class Queen extends Tile{
             {5,0},
             {6,0},
             {7,0},
-            {8,0},
    
         	{-1,0},
             {-2,0},
@@ -18,7 +17,6 @@ public class Queen extends Tile{
             {-5,0},
             {-6,0},
             {-7,0},
-            {-8,0},
             
         	{0,1},
             {0,2},
@@ -27,7 +25,6 @@ public class Queen extends Tile{
             {0,5},
             {0,6},
             {0,7},
-            {0,8},
             
         	{0,-1},
             {0,-2},
@@ -36,7 +33,6 @@ public class Queen extends Tile{
             {0,-5},
             {0,-6},
             {0,-7},
-            {0,-8},
             
             {1, 1},
 			{2, 2},
@@ -54,7 +50,6 @@ public class Queen extends Tile{
 			{-6, -6},
 			{-7, -7},
 			
-
 			{1, -1},
 			{2, -2},
 			{3, -3},
@@ -63,20 +58,18 @@ public class Queen extends Tile{
 			{6, -6},
 			{7, -7},
 			
-
-
 			{-1, 1},
 			{-2, 2},
 			{-3, 3},
 			{-4, 4},
 			{-5, 5},
 			{-6, 6},
-			{-7, 7} 
-
-	                  };
+			{-7, 7} };
 	
-	public Queen(String name, String team, boolean occupied) {
-		super(name, team, occupied);
+	public Queen(String boardName) {
+		super(boardName);
+		super.pieceName = "Queen";
+		super.moves = this.moves;
 	}
 	
 	public boolean validateMove(int[] origin, int[] destination) {

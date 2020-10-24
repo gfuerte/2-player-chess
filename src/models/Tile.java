@@ -1,20 +1,37 @@
 package models;
 
 public class Tile {
-	String name;
+	String boardName;
+	String pieceName;
 	String team;
 	boolean occupied;
 	boolean firstMove;
+	boolean doubleMove;
+	int[][] moves;
 	
-	public Tile(String name, String team, boolean occupied) {
-		this.name = name;
-		this.team = team;
-		this.occupied = occupied;
-		this.firstMove = (occupied) ? true : false;
+	public Tile() {
+		this.boardName = "";
+		this.pieceName = "";
+		this.team = "";
+		this.occupied = false;
+		this.firstMove = false;
+		this.moves = null;
 	}
 	
-	public String getName() {
-		return this.name;
+	public Tile(String boardName) {
+		this.boardName = boardName;
+		this.team = (boardName.charAt(0) == 'w') ? "white" : "black";
+		this.occupied = true;
+		this.firstMove = true;
+		this.doubleMove = false;
+	}
+
+	public String getBoardName() {
+		return this.boardName;
+	}
+	
+	public String getPieceName() {
+		return this.pieceName;
 	}
 	
 	public String getTeam() {
@@ -26,14 +43,22 @@ public class Tile {
 	}
 	
 	public boolean getFirstMove() {
-		return this.getFirstMove();
+		return this.firstMove;
+	}
+	
+	public boolean getDoubleMove() {
+		return this.doubleMove;
+	}
+	
+	public int[][] getMoves() {
+		return this.moves;
 	}
 	
 	public void setFirstMove(boolean firstMove) {
-		this.firstMove = false;
+		this.firstMove = firstMove;
 	}
 	
-	public boolean validateMove(int[] origin, int[] destination) {
-		return false;
+	public void setDoubleMove(boolean doubleMove) {
+		this.doubleMove = doubleMove;
 	}
 }

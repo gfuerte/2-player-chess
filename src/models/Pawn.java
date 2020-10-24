@@ -1,18 +1,15 @@
 package models;
 
 public class Pawn extends Tile {
-	int[][] movesW = {{-1, 0}};
-	int[][] movesB = {{1, 0}};
+	int[][] moves = {{-1, 0}, {-1,1}, {-1,-1}, {1, 0}, {1,1}, {1,-1}};
 	
-	public Pawn(String name, String team, boolean occupied) {
-		super(name, team, occupied);
-		this.firstMove = true;
+	public Pawn(String boardName) {
+		super(boardName);
+		super.pieceName = "Pawn";
+		super.moves = this.moves;
 	}
 	
-	public boolean getFirstMove() {
-		return this.firstMove;
-	}
-	
+	/*
 	public boolean validateMove(int[] origin, int[] destination) {
 		
 		if(this.getTeam().equals("white") && this.firstMove == true){
@@ -52,4 +49,5 @@ public class Pawn extends Tile {
 		}
 		return false;
 	}
+	*/
 }

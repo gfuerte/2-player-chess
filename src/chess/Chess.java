@@ -25,6 +25,7 @@ public class Chess {
 
 		String input;
 		boolean drawCheck = false;
+		
 		while (gameContinues) {
 			if (whitesMove == true) {
 				System.out.print("White's move: ");
@@ -45,19 +46,16 @@ public class Chess {
 				if (checkInput(input) == true) {
 					int[] origin = getIndex(input.substring(0, 2));
 					int[] destination = getIndex(input.substring(3, 5));
-
-					Tile piece = board[origin[0]][origin[1]];
-					if (piece.validateMove(origin, destination) == true) {
-						if (movePiece(origin, destination, input, whitesMove)) {
+					
+					if (validateMove(origin, destination, input, whitesMove) == true) {
 							whitesMove = ((whitesMove == true) ? false : true);
 							System.out.println();
 							printBoard();
+							
 							drawCheck = (input.length() == 11 && input.substring(5).equals(" draw?")) ? true : false;
-						} else {
-							System.out.println("Illegal move, try again\n");
-						}
+						
 					} else {
-						System.out.println("Illegal move, try again\n");
+						System.out.println("Illegal move, try again");
 					}
 				}
 			} else if (drawCheck) {
@@ -69,50 +67,131 @@ public class Chess {
 		}
 		scanner.close();
 	}
-
-	public static boolean movePiece(int[] origin, int[] destination, String input, boolean whitesMove) {
-		if (destination[0] < 0 || destination[0] > 7 || destination[1] < 0 || destination[0] > 7)
+	
+	public static boolean validateMove(int[] origin, int[] destination, String input, boolean whitesMove) {
+		if (destination[0] < 0 || destination[0] > 7 || destination[1] < 0 || destination[0] > 7) {
+			//Case: Input destination is out of bounds
 			return false;
+		}
 
 		Tile piece = board[origin[0]][origin[1]];
-		Tile temp = board[destination[0]][destination[1]];
+		Tile target = board[destination[0]][destination[1]];
+		int[][] moves = piece.getMoves();
 
-		if (piece.getTeam().equals(temp.getTeam()))
+		if ((whitesMove == true && piece.getTeam().equals("black")) || (whitesMove == false && piece.getTeam().equals("white"))) {
+			//Case: User is trying to move a piece not theirs
 			return false;
-
-		if ((whitesMove == true && piece.getTeam().equals("black"))
-				|| (whitesMove == false && piece.getTeam().equals("white")))
+		}
+		
+		if (piece.getTeam().equals(target.getTeam())) {
+			//Case: Destination is occupied by a team mate
 			return false;
+		}
 
-		// Pawn double move start, promotion, diagonal attack, en passant
-		if (piece.getName().equals("wp") || piece.getName().equals("bp")) {
-			if (piece.getFirstMove() == true)
-				piece.setFirstMove(false);
-
-			//attack
-			
-			
-			// promotion
-			if (piece.getTeam().equals("white")) {
-				if (destination[0] == 0) {
-					piece = pawnPromotion(input, "white");
+		if (piece.getPieceName().equals("Pawn")) { //Pawn
+			boolean validMove = false;		
+			if(piece.getTeam().equals("white")) {
+				int movesW[][] = {{-1, 0}};
+				int moves2W[][] = {{-2,0}};
+				int attackW[][] = {{-1,1}, {-1,-1}};
+				
+				if(checkCollisions(origin, destination, moves2W) && piece.getFirstMove()) { //double move
+					validMove = true;
+					piece.setDoubleMove(true);
+				} else if(checkMove(origin, destination, movesW)) { //normal move
+					if(!target.getOccupation()) {
+						validMove = true;
+					}
+				} else if(checkMove(origin, destination, attackW)) { //attack move
+					if(target.getOccupation()) {
+						validMove = true;
+					}
 				}
-			} else if (piece.getTeam().equals("black")) {
-				if (destination[0] == 7) {
-					piece = pawnPromotion(input, "black");
+			} else if(piece.getTeam().equals("black")) {
+				int movesB[][] = {{1, 0}};
+				int moves2B[][] = {{2,0}};
+				int attackB[][] = {{1,1}, {1,-1}};
+				
+				if(checkCollisions(origin, destination, moves2B) && piece.getFirstMove()) { //double move
+					validMove = true;
+					piece.setDoubleMove(true);
+				} else if(checkMove(origin, destination, movesB)) { //normal move
+					if(!target.getOccupation()) {
+						validMove = true;
+					}
+				} else if(checkMove(origin, destination, attackB)) { //attack move
+					if(target.getOccupation()) {
+						validMove = true;
+					}
 				}
+			}
+			if(validMove) {
+				if(destination[0] == 0 || destination[0] == 7) { // promotion
+					piece = (piece.getTeam().equals("white")) ? pawnPromotion(input, "white") : pawnPromotion(input, "black");
+					movePiece(origin, destination, piece, target);
+				} else {
+					movePiece(origin, destination, piece, target);
+				}			
+			}
+			if (piece.getFirstMove()) piece.setFirstMove(false);
+			
+		} else if(piece.getPieceName().equals("Knight")) {
+			//Case: Knight jump over pieces, no need for collision check
+			if(checkMove(origin, destination, moves)) {
+				movePiece(origin, destination, piece, target);
+			}	
+		} else if(piece.getPieceName().equals("King")) { //King
+			movePiece(origin, destination, piece, target); //for now
+		} else { //Queen, Bishop, Rook no special rules to mind
+			if(checkCollisions(origin, destination, moves)) {
+				movePiece(origin, destination, piece, target);
+				piece.setFirstMove(true);
+			}				
+		}
+		
+		return true;
+	}
+	
+	public static boolean checkCollisions(int[] origin, int[] destination, int[][] moves) {
+		int count = -1;
+		for(int i = 0; i < moves.length; i++) {
+			if (origin[0] + moves[i][0] == destination[0] && origin[1] + moves[i][1] == destination[1]) {
+				return true;
+			}
+			
+			count++;
+			try {	
+				Tile temp = board[origin[0] + moves[i][0]][origin[1] + moves[i][1]];
+				if(temp.getOccupation() == true) { //collision has occurred
+					i = i + 6 - count;
+					count = -1;
+				}
+				
+				if(count == 6) count = 0;
+			} catch (ArrayIndexOutOfBoundsException e) {}
+		}
+		
+		return false;
+	}
+	
+	public static boolean checkMove(int[] origin, int[] destination, int[][] moves) {
+		for(int i = 0; i < moves.length; i++) {
+			if (origin[0] + moves[i][0] == destination[0] && origin[1] + moves[i][1] == destination[1]) {
+				return true;
 			}
 		}
 
-		if (temp.getTeam().equals("")) {
+		return false;
+	}
+	
+	public static void movePiece(int[] origin, int[] destination, Tile piece, Tile target) {
+		if (target.getTeam().equals("")) {
 			board[destination[0]][destination[1]] = piece;
-			board[origin[0]][origin[1]] = temp;
+			board[origin[0]][origin[1]] = target;
 		} else {
 			board[destination[0]][destination[1]] = piece;
-			board[origin[0]][origin[1]] = new Tile("", "", false);
+			board[origin[0]][origin[1]] = new Tile();
 		}
-
-		return true;
 	}
 
 	public static boolean checkInput(String input) {
@@ -139,67 +218,67 @@ public class Chess {
 	}
 	
 	public static Tile pawnPromotion(String input, String team) {
-		if(input.length() != 7) return new Queen(team.charAt(0) + "" + input.charAt(6), team, true);
+		if(input.length() != 7) return new Queen(team.charAt(0) + "" + input.charAt(6));
 		
 		Tile piece = null;
 		switch(input.charAt(6)) {
 			case 'B':
-				piece = new Bishop(team.charAt(0) + "" + input.charAt(6), team, true);
+				piece = new Bishop(team.charAt(0) + "" + input.charAt(6));
 				break;
 			case 'N':
-				piece = new Knight(team.charAt(0) + "" + input.charAt(6), team, true);
+				piece = new Knight(team.charAt(0) + "" + input.charAt(6));
 				break;
 			case 'Q':
-				piece = new Queen(team.charAt(0) + "" + input.charAt(6), team, true);
+				piece = new Queen(team.charAt(0) + "" + input.charAt(6));
 				break;
 			case 'R':
-				piece = new Rook(team.charAt(0) + "" + input.charAt(6), team, true);
+				piece = new Rook(team.charAt(0) + "" + input.charAt(6));
 				break;
 			default:
-				piece = new Queen(team.charAt(0) + "" + input.charAt(6), team, true);
+				piece = new Queen(team.charAt(0) + "" + input.charAt(6));
 		}
 		piece.setFirstMove(false);
 		return piece;
 	}
 
 	public static void initBoard() {
-		board[0][0] = new Rook("bR", "black", true);
-		board[0][1] = new Knight("bN", "black", true);
-		board[0][2] = new Bishop("bB", "black", true);
-		board[0][3] = new Queen("bQ", "black", true);
-		board[0][4] = new King("bK", "black", true);
-		board[0][5] = new Bishop("bB", "black", true);
-		board[0][6] = new Knight("bN", "black", true);
-		board[0][7] = new Rook("bR", "black", true);
-		board[1][0] = new Pawn("bp", "black", true);
-		board[1][1] = new Pawn("bp", "black", true);
-		board[1][2] = new Pawn("bp", "black", true);
-		board[1][3] = new Pawn("bp", "black", true);
-		board[1][4] = new Pawn("bp", "black", true);
-		board[1][5] = new Pawn("bp", "black", true);
-		board[1][6] = new Pawn("bp", "black", true);
-		board[1][7] = new Pawn("bp", "black", true);
+		board[0][0] = new Rook("bR");
+		board[0][1] = new Knight("bN");
+		board[0][2] = new Bishop("bB");
+		board[0][3] = new Queen("bQ");
+		board[0][4] = new King("bK");
+		board[0][5] = new Bishop("bB");
+		board[0][6] = new Knight("bN");
+		board[0][7] = new Rook("bR");
+		board[1][0] = new Pawn("bp");
+		board[1][1] = new Pawn("bp");
+		board[1][2] = new Pawn("bp");
+		board[1][3] = new Pawn("bp");
+		board[1][4] = new Pawn("bp");
+		board[1][5] = new Pawn("bp");
+		board[1][6] = new Pawn("bp");
+		board[1][7] = new Pawn("bp");
 
-		board[6][0] = new Pawn("wp", "white", true);
-		board[6][1] = new Pawn("wp", "white", true);
-		board[6][2] = new Pawn("wp", "white", true);
-		board[6][3] = new Pawn("wp", "white", true);
-		board[6][4] = new Pawn("wp", "white", true);
-		board[6][5] = new Pawn("wp", "white", true);
-		board[6][6] = new Pawn("wp", "white", true);
-		board[6][7] = new Pawn("wp", "white", true);
-		board[7][0] = new Rook("wR", "white", true);
-		board[7][1] = new Knight("wN", "white", true);
-		board[7][2] = new Bishop("wB", "white", true);
-		board[7][3] = new Queen("wQ", "white", true);
-		board[7][4] = new King("wK", "white", true);
-		board[7][5] = new Bishop("wB", "white", true);
-		board[7][6] = new Knight("wN", "white", true);
-		board[7][7] = new Rook("wR", "white", true);
+		board[6][0] = new Pawn("wp");
+		board[6][1] = new Pawn("wp");
+		board[6][2] = new Pawn("wp");
+		board[6][3] = new Pawn("wp");
+		board[6][4] = new Pawn("wp");
+		board[6][5] = new Pawn("wp");
+		board[6][6] = new Pawn("wp");
+		board[6][7] = new Pawn("wp");
+		board[7][0] = new Rook("wR");
+		board[7][1] = new Knight("wN");
+		board[7][2] = new Bishop("wB");
+		board[7][3] = new Queen("wQ");
+		board[7][4] = new King("wK");
+		board[7][5] = new Bishop("wB");
+		board[7][6] = new Knight("wN");
+		board[7][7] = new Rook("wR");
 
 		for (int i = 2; i < 6; i++) {
 			for (int j = 0; j < 8; j++) {
-				board[i][j] = new Tile("", "", false);
+				board[i][j] = new Tile();
 			}
 		}
 	}
@@ -209,7 +288,7 @@ public class Chess {
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
 				if (board[i][j].getOccupation() == true) {
-					System.out.print(board[i][j].getName() + " ");
+					System.out.print(board[i][j].getBoardName() + " ");
 				} else {
 					if (whiteTile) {
 						System.out.print("   ");
@@ -224,5 +303,9 @@ public class Chess {
 		}
 		System.out.println(" a  b  c  d  e  f  g  h");
 		System.out.println();
+	}
+	
+	public static void updateZones() {
+		
 	}
 }
