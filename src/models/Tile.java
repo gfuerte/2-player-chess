@@ -6,7 +6,6 @@ public class Tile {
 	String team;
 	boolean occupied;
 	boolean firstMove;
-	boolean doubleMove;
 	int[][] moves;
 	
 	public Tile() {
@@ -23,7 +22,6 @@ public class Tile {
 		this.team = (boardName.charAt(0) == 'w') ? "white" : "black";
 		this.occupied = true;
 		this.firstMove = true;
-		this.doubleMove = false;
 	}
 
 	public String getBoardName() {
@@ -46,19 +44,11 @@ public class Tile {
 		return this.firstMove;
 	}
 	
-	public boolean getDoubleMove() {
-		return this.doubleMove;
-	}
-	
 	public int[][] getMoves() {
 		return this.moves;
 	}
 	
 	public void setFirstMove(boolean firstMove) {
 		this.firstMove = firstMove;
-	}
-	
-	public void setDoubleMove(boolean doubleMove) {
-		this.doubleMove = doubleMove;
 	}
 }

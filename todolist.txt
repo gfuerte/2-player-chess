@@ -3,22 +3,12 @@ Input
 	-> promotion and draw at the same input "c7 c8 N draw?"
 
 Output
-	-> If a move is made and it puts the opponent's move under check print: "Check"
-		-> no need to output check again if they input an illegal move
 	-> If checkmate is detected print: "Checkmate"
 	
 2. Game mechanics
--Draw
-	->"For the purpose of the assignment, there is no option to deny a draw. if a draw is asked, the game will end in a draw."
--Pawn
-	-> Promotion
-	-> En Passsant
-	-> Diagonal Attacking
 -King
 	-> Castling
 	-> Avoiding Checks
--Rook
-	->Castling
 -Stalemates
 	-> output draw
 	
