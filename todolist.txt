@@ -24,8 +24,4 @@ Output
 	
 3. Figure out how to do javadoc
 
-4. Bugs
--All pieces can jump over other pieces 
-
-
 

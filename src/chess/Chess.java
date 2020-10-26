@@ -1,5 +1,7 @@
 package chess;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import models.Bishop;
@@ -13,13 +15,18 @@ import models.Tile;
 public class Chess {
 
 	static Tile[][] board = new Tile[8][8];
-
+	
+	static int[] wKing = {7, 4};
+	static int[] bKing = {0, 4};
+	static int whiteCheck = 0;
+	static int blackCheck = 0;
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Scanner scanner = new Scanner(System.in);
 		initBoard();
 		printBoard();
-
+		
 		boolean gameContinues = true;
 		boolean whitesMove = true;
 
@@ -52,8 +59,11 @@ public class Chess {
 							System.out.println();
 							printBoard();
 							
+							check();
+							System.out.println("White Check is: " + whiteCheck);
+							System.out.println("Black Check is: " + blackCheck);
+							
 							drawCheck = (input.length() == 11 && input.substring(5).equals(" draw?")) ? true : false;
-						
 					} else {
 						System.out.println("Illegal move, try again");
 					}
@@ -142,6 +152,13 @@ public class Chess {
 			}	
 		} else if(piece.getPieceName().equals("King")) { //King
 			movePiece(origin, destination, piece, target); //for now
+			if(piece.getTeam().equals("white")) {
+				wKing[0] = destination[0];
+				wKing[1] = destination[1];
+			} else {
+				bKing[0] = destination[0];
+				bKing[1] = destination[1];
+			}
 		} else { //Queen, Bishop, Rook no special rules to mind
 			if(checkCollisions(origin, destination, moves)) {
 				movePiece(origin, destination, piece, target);
@@ -193,6 +210,14 @@ public class Chess {
 			board[origin[0]][origin[1]] = new Tile();
 		}
 	}
+	
+	public static void reverseMove(int[] origin, int[] destination, Tile piece, Tile target, boolean prevOccupied) {
+		if(prevOccupied) {
+			
+		} else {
+			
+		}
+	}
 
 	public static boolean checkInput(String input) {
 		if (input.substring(0, 2).equals(input.substring(3, 5)))
@@ -239,6 +264,100 @@ public class Chess {
 		}
 		piece.setFirstMove(false);
 		return piece;
+	}
+	
+	
+	//counts how many pieces a certain king is being checked by
+	public static void check() { 
+		int[][][] moves = { {{1,0}, {2,0}, {3,0}, {4,0}, {5,0}, {6,0}, {7,0}}, //S
+							{{-1,0}, {-2,0}, {-3,0}, {-4,0}, {-5,0}, {-6,0}, {-7,0}}, //N
+							{{0,1}, {0,2}, {0,3}, {0,4}, {0,5}, {0,6}, {0,7}}, //E
+							{{0,-1}, {0,-2}, {0,-3}, {0,-4}, {0,-5}, {0,-6}, {0,-7}}, //W
+							
+							{{1,1}, {2,2}, {3,3}, {4,4}, {5,5}, {6,6}, {7,7}}, //SE
+							{{-1,-1}, {-2,-2}, {-3,-3}, {-4,-4}, {-5,-5}, {-6,-6}, {-7,-7}}, //NW
+							{{-1,1}, {-2,2}, {-3,3}, {-4,4}, {-5,5}, {-6,6}, {-7,7}}, //NE
+							{{1,-1}, {2,-2}, {3,-3}, {4,-4}, {5,-5}, {6,-6}, {7,-7}}, //SW
+							{{2,1}, {2,-1}, {-2,1}, {-2,-1}, {1,-2}, {1,2}, {-1,-2}, {-1,2}} //Knight
+							};
+		
+		whiteCheck = 0;
+		blackCheck = 0;
+		//Count how many pieces is the white king being checked by
+		for(int i = 0; i < moves.length; i++) {
+			for(int j = 0; j < moves[i].length; j++) {
+				try {
+					Tile temp = board[wKing[0] + moves[i][j][0]][wKing[1] + moves[i][j][1]];
+					if(temp.getOccupation()) {
+						if(temp.getTeam().equals("black")) {
+							if(((i == 6 && j == 0) || (i == 5 && j == 0)) && temp.getPieceName().equals("Pawn")) {
+								whiteCheck++;
+							} else if((i >= 0 || i <= 3) && (temp.getPieceName().equals("Rook") || temp.getPieceName().equals("Queen"))) {
+								whiteCheck++;
+							} else if((i >= 4 || i <= 7) && (temp.getPieceName().equals("Bishop") || temp.getPieceName().equals("Queen"))) {
+								whiteCheck++;
+							} else if(i == 8 && temp.getPieceName().equals("Knight")) {
+								whiteCheck++;
+							}
+						}
+						break;
+					}
+				} catch (ArrayIndexOutOfBoundsException e) { break; }
+			}
+		}
+		
+		//Count how many pieces is the black king being checked by
+		for(int i = 0; i < moves.length; i++) {
+			for(int j = 0; j < moves[i].length; j++) {
+				try {
+					Tile temp = board[bKing[0] + moves[i][j][0]][bKing[1] + moves[i][j][1]];
+					if(temp.getOccupation()) {
+						if(temp.getTeam().equals("white")) {
+							if(((i == 4 && j == 0) || (i == 7 && j == 0)) && temp.getPieceName().equals("Pawn")) {
+								blackCheck++;
+							} else if((i >= 0 || i <= 3) && (temp.getPieceName().equals("Rook") || temp.getPieceName().equals("Queen"))) {
+								blackCheck++;
+							} else if((i >= 4 || i <= 7) && (temp.getPieceName().equals("Bishop") || temp.getPieceName().equals("Queen"))) {
+								blackCheck++;
+							} else if(i == 8 && temp.getPieceName().equals("Knight")) {
+								blackCheck++;
+							}
+						}
+						break;
+					}
+				} catch (ArrayIndexOutOfBoundsException e) { break; }
+			}
+		}
+	}
+	
+	//checks to see if a check is avoidable - if list.size == 0 it's a check mate, >= 1 it's not
+	//returns a list of possible moves user can do to avoid check
+	public static List<String> checkmate(String team) {
+		List<String> possibleMoves = new ArrayList<>();
+		int wTemp = whiteCheck;
+		int bTemp = blackCheck;
+		
+		if(team.equals("white")) {
+			Tile king = board[wKing[0]][wKing[1]];
+			int[][] moves = king.getMoves();
+			
+			if(whiteCheck == 1) { //checked by one piece, have to either move, block, or take attacker
+				
+			} else if(whiteCheck > 1) { //checked by multiple pieces, king has to move to avoid check
+				
+			}
+			
+		} else {
+			Tile king = board[bKing[0]][bKing[1]];
+			int[][] moves = king.getMoves();
+			
+			if(blackCheck == 1) { //checked by one piece, have to either move, block, or take attacker
+				
+			} else if(blackCheck > 1) { //checked by multiple pieces, king has to move to avoid check
+				
+			}
+		}
+		return possibleMoves;
 	}
 
 	public static void initBoard() {
@@ -303,9 +422,5 @@ public class Chess {
 		}
 		System.out.println(" a  b  c  d  e  f  g  h");
 		System.out.println();
-	}
-	
-	public static void updateZones() {
-		
 	}
 }
