@@ -10,6 +10,10 @@ import models.Queen;
 import models.Rook;
 import models.Tile;
 
+/**
+ * @author Greg Fuerte
+ * @author Aries Regalado
+ */
 public class Chess {
 	static Tile[][] board = new Tile[8][8];
 
@@ -59,29 +63,34 @@ public class Chess {
 					int[] origin = getIndex(input.substring(0, 2));
 					int[] destination = getIndex(input.substring(3, 5));
 
-					// previousDestination = destination;
-
 					if (validateMove(origin, destination, input, whitesMove)) {
 						check();
 						if (whitesMove && blackCheck >= 1) {
+
 							if (checkmate("black")) {
-
-							} else {
-								System.out.println("Check");
+								System.out.println("Checkmate\n");
+								printBoard();
+								System.out.println("White wins");
+								break;
 							}
+							System.out.println("Check");
 						} else if (!whitesMove && whiteCheck >= 1) {
-							if (checkmate("white")) {
 
-							} else {
-								System.out.println("Check");
+							if (checkmate("white")) {
+								System.out.println("Checkmate\n");
+								printBoard();
+								System.out.println("Black wins");
+								break;
 							}
+							System.out.println("Check");
 						}
 
 						System.out.println();
 						printBoard();
 
 						previousMethod = input.substring(0, 5);
-						drawCheck = (input.length() == 11 && input.substring(5).equals(" draw?")) ? true : false;
+						drawCheck = ((input.length() == 11 && input.substring(5).equals(" draw?"))
+								|| (input.length() == 13 && input.substring(7).equals(" draw?"))) ? true : false;
 						whitesMove = ((whitesMove) ? false : true);
 					} else {
 						System.out.println("Illegal move, try again");
@@ -92,6 +101,11 @@ public class Chess {
 		scanner.close();
 	}
 
+	/**
+	 * Determines if a the previous input correspond to a pawn double move.
+	 * @param prev The previous input from the current one.
+	 * @return boolean Returns true if the previous input correspond to a pawn double move, false otherwise.
+	 */
 	public static boolean validPrevious(String prev) {
 		String[] arr = { "a2 a4", "b2 b4", "c2 c4", "d2 d4", "e2 e4", "f2 f4", "g2 g4", "h2 h4", "a7 a5", "b7 b5",
 				"c7 c5", "d7 d5", "e7 e5", "f7 f5", "g7 g5", "h7 h5" };
@@ -104,9 +118,16 @@ public class Chess {
 		return false;
 	}
 
+	/**
+	 * Determines if a given move is valid by checking if that particular piece can move at that location, the given situation supports it, and it does not leave their king in check.
+	 * @param origin Where the piece is currently located in the board via board index.
+	 * @param destination Where the piece wants to go in the board via board index.
+	 * @param input The user input used for pawn promotion.
+	 * @param whitesMove True if the current move is white's, false otherwise
+	 * @return True if the given move is valid, false otherwise.
+	 */
 	public static boolean validateMove(int[] origin, int[] destination, String input, boolean whitesMove) {
 		if (destination[0] < 0 || destination[0] > 7 || destination[1] < 0 || destination[0] > 7) {
-			// Case: Input destination is out of bounds
 			return false;
 		}
 
@@ -114,14 +135,16 @@ public class Chess {
 		Tile target = board[destination[0]][destination[1]];
 		int[][] moves = piece.getMoves();
 
+		if (piece.getOccupation() == false) {
+			return false;
+		}
+
 		if ((whitesMove == true && piece.getTeam().equals("black"))
 				|| (whitesMove == false && piece.getTeam().equals("white"))) {
-			// Case: User is trying to move a piece not theirs
 			return false;
 		}
 
 		if (piece.getTeam().equals(target.getTeam())) {
-			// Case: Destination is occupied by a team mate
 			return false;
 		}
 
@@ -133,7 +156,9 @@ public class Chess {
 				int attackW[][] = { { -1, 1 }, { -1, -1 } };
 
 				if (checkCollisions(origin, destination, moves2W) && piece.getFirstMove()) { // double move
-					validMove = true;
+					if (!target.getOccupation()) {
+						validMove = true;
+					}
 				} else if (checkMove(origin, destination, movesW)) { // normal move
 					if (!target.getOccupation()) {
 						validMove = true;
@@ -167,7 +192,9 @@ public class Chess {
 				int attackB[][] = { { 1, 1 }, { 1, -1 } };
 
 				if (checkCollisions(origin, destination, moves2B) && piece.getFirstMove()) { // double move
-					validMove = true;
+					if (!target.getOccupation()) {
+						validMove = true;
+					}
 				} else if (checkMove(origin, destination, movesB)) { // normal move
 					if (!target.getOccupation()) {
 						validMove = true;
@@ -241,26 +268,27 @@ public class Chess {
 
 					check();
 					if (whiteCheck > 0) {
-						board[7][7] = board[7][5];
-						reverseMove(origin, destination, piece, target);
-						board[7][5] = new Tile();
+						reverseCastle(destination, "white");
 						return false;
 					}
 					board[7][5].setFirstMove(false);
 				} else if (destination[0] == 7 && destination[1] == 2) { // if king is white and going to left side
-																			// towards rook
 					movePiece(origin, destination, piece, target);
 					board[7][3] = board[7][0];
 					board[7][0] = new Tile();
 
 					check();
 					if (whiteCheck > 0) {
-						board[7][0] = board[7][3];
-						reverseMove(origin, destination, piece, target);
-						board[7][3] = new Tile();
+						reverseCastle(destination, "white");
 						return false;
 					}
 					board[7][3].setFirstMove(false);
+				} else {
+					movePiece(origin, destination, piece, target);
+					if (piece.getTeam().equals("white") && checksOwnKing("white")) {
+						reverseMove(origin, destination, piece, target);
+						return false;
+					}
 				}
 			} else if (piece.getTeam().equals("black") && validCastling()) {
 				// if its King is black and going to right side towards rook
@@ -271,45 +299,38 @@ public class Chess {
 
 					check();
 					if (blackCheck > 0) {
-						board[0][7] = board[0][5];
-						reverseMove(origin, destination, piece, target);
-						board[0][5] = new Tile();
+						reverseCastle(destination, "black");
 						return false;
 					}
 					board[0][5].setFirstMove(false);
 				} else if (destination[0] == 0 && destination[1] == 2) { // if king is black and going to left side
-																			// towards rook
 					movePiece(origin, destination, piece, target);
 					board[0][3] = board[0][0];
 					board[0][0] = new Tile();
 
 					check();
 					if (blackCheck > 0) {
-						board[0][0] = board[0][3];
-						reverseMove(origin, destination, piece, target);
-						board[0][3] = new Tile();
+						reverseCastle(destination, "black");
 						return false;
 					}
 					board[0][3].setFirstMove(false);
+				} else {
+					movePiece(origin, destination, piece, target); // for now
+
+					if (piece.getTeam().equals("black") && checksOwnKing("black")) {
+						reverseMove(origin, destination, piece, target);
+						return false;
+					}
 				}
 			} else { // normal move
-				movePiece(origin, destination, piece, target); // for now
+				movePiece(origin, destination, piece, target);
 				if (piece.getTeam().equals("white") && checksOwnKing("white")) {
 					reverseMove(origin, destination, piece, target);
+					return false;
 				} else if (piece.getTeam().equals("black") && checksOwnKing("black")) {
 					reverseMove(origin, destination, piece, target);
+					return false;
 				}
-				return false;
-			}
-
-			if (piece.getTeam().equals("white")) {
-				wKing[0] = destination[0];
-				wKing[1] = destination[1];
-				System.out.println("White King is at: " + wKing[0] + " " + wKing[1]);
-			} else {
-				bKing[0] = destination[0];
-				bKing[1] = destination[1];
-				System.out.println("Black King is at: " + bKing[0] + " " + bKing[1]);
 			}
 			piece.setFirstMove(false);
 
@@ -326,16 +347,32 @@ public class Chess {
 				return false;
 			}
 		}
+
+		// secondary protection, this if-else statement should never be reached
+		if (piece.getTeam().equals("white") && whiteCheck >= 1) {
+			System.out.println("This should not be happening");
+			return false;
+		} else if (piece.getTeam().equals("black") && blackCheck >= 1) {
+			System.out.println("This should not be happening");
+			return false;
+		}
+
 		return true;
 	}
 
+	/**
+	 * Determines if there is a piece in the way of a given move.
+	 * @param origin Where the piece is currently located in the board via board index.
+	 * @param destination Where the piece wants to go in the board via board index.
+	 * @param moves A 2d array of every possible move a Queen/Bishop/Rook can make.
+	 * @return Returns true if there is a collision on the way of a move, false otherwise.
+	 */
 	public static boolean checkCollisions(int[] origin, int[] destination, int[][] moves) {
 		int count = -1;
 		for (int i = 0; i < moves.length; i++) {
 			if (origin[0] + moves[i][0] == destination[0] && origin[1] + moves[i][1] == destination[1]) {
 				return true;
 			}
-
 			count++;
 			try {
 				Tile temp = board[origin[0] + moves[i][0]][origin[1] + moves[i][1]];
@@ -349,10 +386,16 @@ public class Chess {
 			} catch (ArrayIndexOutOfBoundsException e) {
 			}
 		}
-
 		return false;
 	}
 
+	/**
+	 * Determines if a given move is valid by checking matching the destination with the origin plus a particular move.
+	 * @param origin Where the piece is currently located in the board via board index.
+	 * @param destination Where the piece wants to go in the board via board index.
+	 * @param moves A 2d array of every possible move that piece can make.
+	 * @return Returns true if the given move is reachable and valid, false otherwise.
+	 */
 	public static boolean checkMove(int[] origin, int[] destination, int[][] moves) {
 		for (int i = 0; i < moves.length; i++) {
 			if (origin[0] + moves[i][0] == destination[0] && origin[1] + moves[i][1] == destination[1]) {
@@ -362,6 +405,13 @@ public class Chess {
 		return false;
 	}
 
+	/**
+	 * Given where the piece that wants to move is located, it swaps tiles with tile located at the destination. If an enemy piece is located there, captures it.
+	 * @param origin Where the piece is currently located in the board via board index.
+	 * @param destination Where the piece wants to go in the board via board index.
+	 * @param piece The piece that wants to move.
+	 * @param target The enemy piece that piece wants to attack or the tile that the piece wants to move to.
+	 */
 	public static void movePiece(int[] origin, int[] destination, Tile piece, Tile target) {
 		if (target.getTeam().equals("")) {
 			board[destination[0]][destination[1]] = piece;
@@ -370,20 +420,85 @@ public class Chess {
 			board[destination[0]][destination[1]] = piece;
 			board[origin[0]][origin[1]] = new Tile();
 		}
+
+		if (piece.getPieceName().equals("King")) {
+			if (piece.getTeam().equals("white")) {
+				wKing[0] = destination[0];
+				wKing[1] = destination[1];
+			} else if (piece.getTeam().equals("black")) {
+				bKing[0] = destination[0];
+				bKing[1] = destination[1];
+			}
+		}
 	}
 
+	/**
+	 * Reverses the move a piece most recently made on the board.
+	 * @param origin Where the piece was located in the board via board index.
+	 * @param destination Where the piece is currently located in the board via board index.
+	 * @param piece The piece that recently moved.
+	 * @param target The enemy piece that the piece attacked or the tile object that the piece swapped places with.
+	 */
 	public static void reverseMove(int[] origin, int[] destination, Tile piece, Tile target) {
 		board[destination[0]][destination[1]] = target;
 		board[origin[0]][origin[1]] = piece;
+
+		if (piece.getPieceName().equals("King")) {
+			if (piece.getTeam().equals("white")) {
+				wKing[0] = origin[0];
+				wKing[1] = origin[1];
+			} else if (piece.getTeam().equals("black")) {
+				bKing[0] = origin[0];
+				bKing[1] = origin[1];
+			}
+		}
 	}
 
-	public static void castlingMove(int[] origin, int[] destination, Tile piece, Tile target) {
-		board[destination[0]][destination[1]] = piece;
-		board[origin[0]][origin[1]] = new Tile();
+	/**
+	 * Reverse the castle a king most recently made on the board.
+	 * @param origin Where the king was located in the board via board index.
+	 * @param team What team the king sides with.
+	 */
+	public static void reverseCastle(int[] origin, String team) {
+		if (team.equals("white")) {
+			if (origin[0] == 7 && origin[1] == 2) {
+				board[7][0] = board[7][3];
+				board[7][3] = new Tile();
+				board[7][4] = board[7][2];
+				board[7][2] = new Tile();
+			} else if (origin[0] == 7 && origin[1] == 6) {
+				board[7][7] = board[7][5];
+				board[7][5] = new Tile();
+				board[7][4] = board[7][6];
+				board[7][6] = new Tile();
+			}
+			wKing[0] = 7;
+			wKing[1] = 4;
+		} else if (team.equals("black")) {
+			if (origin[0] == 0 && origin[1] == 2) {
+				board[0][0] = board[0][3];
+				board[0][3] = new Tile();
+				board[0][4] = board[0][2];
+				board[0][2] = new Tile();
+			} else if (origin[0] == 0 && origin[1] == 6) {
+				board[0][7] = board[0][5];
+				board[0][5] = new Tile();
+				board[0][4] = board[0][6];
+				board[0][6] = new Tile();
+			}
+			bKing[0] = 0;
+			bKing[1] = 4;
+		}
 	}
 
+	/**
+	 * Given the most recent user input and team of the piece, returns the piece object of what the user wants the pawn to promote into.
+	 * @param input The user input.
+	 * @param team What team the user resides with.
+	 * @return Returns the new Tile object that pawn promoted to.
+	 */
 	public static Tile pawnPromotion(String input, String team) {
-		if (input.length() != 7)
+		if (input.length() != 7 && input.length() != 13)
 			return new Queen(team.charAt(0) + "" + "Q");
 
 		Tile piece = null;
@@ -407,6 +522,10 @@ public class Chess {
 		return piece;
 	}
 
+	/**
+	 * Determines if a King is currently in the right situation to perform a castle.
+	 * @return Returns true if a King can do a castle, otherwise false.
+	 */
 	public static boolean validCastling() {
 		// checks valid of right side of white king
 		if ((board[7][4].getPieceName().equals("King") && board[7][7].getPieceName().equals("Rook"))
@@ -449,6 +568,11 @@ public class Chess {
 		return false;
 	}
 
+	/**
+	 * Determines if the most recent move leaves the given team's King in check.
+	 * @param team Either "white" or "black" depending on what team the current user resides with.
+	 * @return Returns true if the recent move leaves their own King in check, false otherwise.
+	 */
 	public static boolean checksOwnKing(String team) {
 		int wTemp = whiteCheck;
 		int bTemp = blackCheck;
@@ -465,6 +589,9 @@ public class Chess {
 		return false;
 	}
 
+	/**
+	 * Updates global variables whiteCheck and blackCheck on how many pieces is currently checking the White King or Black King respectively.
+	 */
 	public static void check() {
 		int[][][] moves = { { { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }, { 5, 0 }, { 6, 0 }, { 7, 0 } }, // S
 				{ { -1, 0 }, { -2, 0 }, { -3, 0 }, { -4, 0 }, { -5, 0 }, { -6, 0 }, { -7, 0 } }, // N
@@ -518,7 +645,6 @@ public class Chess {
 								blackCheck++;
 							} else if ((i >= 0 && i <= 3)
 									&& (temp.getPieceName().equals("Rook") || temp.getPieceName().equals("Queen"))) {
-								System.out.println(i + " " + j);
 								blackCheck++;
 							} else if ((i >= 4 && i <= 7)
 									&& (temp.getPieceName().equals("Bishop") || temp.getPieceName().equals("Queen"))) {
@@ -536,35 +662,142 @@ public class Chess {
 		}
 	}
 
+	/**
+	 * Determines if a certain team's king is in check mate.
+	 * @param team Either "white" or "black" corresponding to that color's king
+	 * @return boolean Returns true if a team's king is in check mate, false otherwise.
+	 */
 	public static boolean checkmate(String team) {
-		int wTemp = whiteCheck;
-		int bTemp = blackCheck;
+		if ((team.equals("white") && whiteCheck == 0) || (team.equals("black") && blackCheck == 0))
+			return false;
 
-		if (team.equals("white")) { // white king is in check
-			Tile king = board[wKing[0]][wKing[1]];
-			int[][] moves = king.getMoves();
+		if (team.equals("white")) { // white king that is in check
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board[i].length; j++) {
+					Tile piece = board[i][j];
 
-			if (whiteCheck == 1) { // checked by one piece, have to either move, block, or take attacker
-
-			} else if (whiteCheck > 1) { // checked by multiple pieces, king has to move to avoid check
-
+					if (piece.getTeam().equals("white")) {
+						int[] origin = { i, j };
+						int[][] moves = piece.getMoves();
+						if (piece.getPieceName().equals("Pawn")) {
+							int pawnMoves[][] = { { -1, 0 }, { -1, 1 }, { -1, -1 }, { -2, 0 } };
+							for (int k = 0; k < pawnMoves.length; k++) {
+								int[] destination = { i + pawnMoves[k][0], j + pawnMoves[k][1] };
+								try {
+									Tile target = board[destination[0]][destination[1]];
+									if (!target.getTeam().equals("white")
+											&& validateMove(origin, destination, "", true)) {
+										reverseMove(origin, destination, piece, target);
+										return false;
+									}
+								} catch (ArrayIndexOutOfBoundsException e) {
+								}
+							}
+						} else if (piece.getPieceName().equals("King")) {
+							int kingMoves[][] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { 1, -1 },
+									{ -1, 1 }, { -1, 1 }, { 0, -2 }, { 0, 2 } };
+							for (int k = 0; k < kingMoves.length; k++) {
+								int[] destination = { i + kingMoves[k][0], j + kingMoves[k][1] };
+								try {
+									Tile target = board[destination[0]][destination[1]];
+									if (!target.getTeam().equals("white")
+											&& validateMove(origin, destination, "", true)) {
+										if (k == 8 || k == 9) {
+											reverseCastle(destination, "white");
+										} else {
+											reverseMove(origin, destination, piece, target);
+										}
+										return false;
+									}
+								} catch (ArrayIndexOutOfBoundsException e) {
+								}
+							}
+						} else {
+							for (int k = 0; k < moves.length; k++) {
+								int[] destination = { i + moves[k][0], j + moves[k][1] };
+								try {
+									Tile target = board[destination[0]][destination[1]];
+									if (!target.getTeam().equals("white")
+											&& validateMove(origin, destination, "", true)) {
+										reverseMove(origin, destination, piece, target);
+										return false;
+									}
+								} catch (ArrayIndexOutOfBoundsException e) {
+								}
+							}
+						}
+					}
+				}
 			}
-
-		} else {
-			Tile king = board[bKing[0]][bKing[1]]; // black king is in check
-			int[][] moves = king.getMoves();
-
-			if (blackCheck == 1) { // checked by one piece, have to either move, block, or take attacker
-
-			} else if (blackCheck > 1) { // checked by multiple pieces, king has to move to avoid check
-
+		} else if (team.equals("black")) {
+			for (int i = 0; i < board.length; i++) {
+				for (int j = 0; j < board[i].length; j++) {
+					Tile piece = board[i][j];
+					if (piece.getTeam().equals("black")) {
+						int[] origin = { i, j };
+						int[][] moves = piece.getMoves();
+						if (piece.getPieceName().equals("Pawn")) {
+							int pawnMoves[][] = { { 1, 0 }, { 1, 1 }, { 1, -1 }, { 2, 0 } };
+							for (int k = 0; k < pawnMoves.length; k++) {
+								int[] destination = { i + pawnMoves[k][0], j + pawnMoves[k][1] };
+								try {
+									Tile target = board[destination[0]][destination[1]];
+									if (!target.getTeam().equals("black")
+											&& validateMove(origin, destination, "", false)) {
+										reverseMove(origin, destination, piece, target);
+										return false;
+									}
+								} catch (ArrayIndexOutOfBoundsException e) {
+								}
+							}
+						} else if (piece.getPieceName().equals("King")) {
+							int kingMoves[][] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { 1, -1 },
+									{ -1, 1 }, { -1, 1 }, { 0, -2 }, { 0, 2 } };
+							for (int k = 0; k < kingMoves.length; k++) {
+								int[] destination = { i + kingMoves[k][0], j + kingMoves[k][1] };
+								try {
+									Tile target = board[destination[0]][destination[1]];
+									if (!target.getTeam().equals("black")
+											&& validateMove(origin, destination, "", false)) {
+										if (k == 8 || k == 9) {
+											reverseCastle(destination, "white");
+										} else {
+											reverseMove(origin, destination, piece, target);
+										}
+										return false;
+									}
+								} catch (ArrayIndexOutOfBoundsException e) {
+								}
+							}
+						} else {
+							for (int k = 0; k < moves.length; k++) {
+								int[] destination = { i + moves[k][0], j + moves[k][1] };
+								try {
+									Tile target = board[destination[0]][destination[1]];
+									if (!target.getTeam().equals("black")
+											&& validateMove(origin, destination, "", false)) {
+										reverseMove(origin, destination, piece, target);
+										return false;
+									}
+								} catch (ArrayIndexOutOfBoundsException e) {
+								}
+							}
+						}
+					}
+				}
 			}
 		}
-
 		return true;
 	}
 
+	/**
+	 * Checks if a certain input is properly formatted.
+	 * @param input User input.
+	 * @return boolean Returns true if input if properly formatted, false otherwise.
+	 */
 	public static boolean checkInput(String input) {
+		if (input.length() != 5 && input.length() != 7 && input.length() != 13)
+			return false;
 		if (input.substring(0, 2).equals(input.substring(3, 5)))
 			return false;
 		if ((input.charAt(0) - '0' >= 49 && input.charAt(0) - '0' <= 56)
@@ -576,6 +809,11 @@ public class Chess {
 		return false;
 	}
 
+	/**
+	 * Returns the board index of a given input.
+	 * @param input Substring of the original user input of length 2.
+	 * @return int[] Index of the input in terms of the board.
+	 */
 	public static int[] getIndex(String input) {
 		if (input.length() != 2)
 			return null;
@@ -587,6 +825,9 @@ public class Chess {
 		return index;
 	}
 
+	/**
+	 * Initializes the board at the start of the program.
+	 */
 	public static void initBoard() {
 		board[0][0] = new Rook("bR");
 		board[0][1] = new Knight("bN");
@@ -629,6 +870,9 @@ public class Chess {
 		}
 	}
 
+	/**
+	 * Prints the board at the current state.
+	 */
 	public static void printBoard() {
 		boolean whiteTile = true;
 		for (int i = 0; i < 8; i++) {

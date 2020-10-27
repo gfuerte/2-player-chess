@@ -1,5 +1,8 @@
 package models;
-
+/**
+ * @author Greg Fuerte
+ * @author Aries Regalado
+ */
 public class Knight extends Tile {
 
 	int[][] moves = {  {2,1},

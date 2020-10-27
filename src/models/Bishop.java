@@ -1,5 +1,8 @@
 package models;
-
+/**
+ * @author Greg Fuerte
+ * @author Aries Regalado
+ */
 public class Bishop extends Tile {
 	int[][] moves = {   {1, 1},
 						{2, 2},
