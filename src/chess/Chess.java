@@ -1,5 +1,8 @@
 package chess;
 
+import java.awt.desktop.SystemSleepEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 import models.Bishop;
@@ -34,8 +37,8 @@ public class Chess {
 
 		String input;
 		boolean whitesMove = true;
-		boolean drawCheck = false;
-
+		boolean drawCheck = false;		
+		
 		while (gameContinues) {
 			if (whitesMove == true) {
 				System.out.print("White's move: ");
@@ -44,7 +47,6 @@ public class Chess {
 			}
 
 			input = scanner.nextLine();
-
 			if (input.equals("resign")) { // resign
 				if (whitesMove) {
 					System.out.println("Black wins");
@@ -150,11 +152,10 @@ public class Chess {
 
 		if (piece.getPieceName().equals("Pawn")) { // Pawn
 			boolean validMove = false;
-			if (piece.getTeam().equals("white")) {
+			if (piece.getTeam().equals("white")) {				
 				int movesW[][] = { { -1, 0 } };
 				int moves2W[][] = { { -2, 0 } };
 				int attackW[][] = { { -1, 1 }, { -1, -1 } };
-
 				if (checkCollisions(origin, destination, moves2W) && piece.getFirstMove()) { // double move
 					if (!target.getOccupation()) {
 						validMove = true;
@@ -257,6 +258,8 @@ public class Chess {
 				} else {
 					piece.setFirstMove(false);
 				}
+			} else {
+				return false;
 			}
 		} else if (piece.getPieceName().equals("King")) { // King
 			if (piece.getTeam().equals("white") && validCastling()) {
@@ -628,9 +631,11 @@ public class Chess {
 								whiteCheck++;
 							}
 						}
+						if(i == 8) continue;
 						break;
 					}
 				} catch (ArrayIndexOutOfBoundsException e) {
+					if(i == 8) continue;
 					break;
 				}
 			}
@@ -655,9 +660,11 @@ public class Chess {
 								blackCheck++;
 							}
 						}
+						if(i == 8) continue;
 						break;
 					}
-				} catch (ArrayIndexOutOfBoundsException e) {
+				} catch (ArrayIndexOutOfBoundsException e) {				
+					if(i == 8) continue;
 					break;
 				}
 			}
@@ -677,7 +684,7 @@ public class Chess {
 			for (int i = 0; i < board.length; i++) {
 				for (int j = 0; j < board[i].length; j++) {
 					Tile piece = board[i][j];
-
+					boolean firstMove = piece.getFirstMove();
 					if (piece.getTeam().equals("white")) {
 						int[] origin = { i, j };
 						int[][] moves = piece.getMoves();
@@ -690,6 +697,7 @@ public class Chess {
 									if (!target.getTeam().equals("white")
 											&& validateMove(origin, destination, "", true)) {
 										reverseMove(origin, destination, piece, target);
+										piece.setFirstMove(firstMove);
 										return false;
 									}
 								} catch (ArrayIndexOutOfBoundsException e) {
@@ -697,7 +705,7 @@ public class Chess {
 							}
 						} else if (piece.getPieceName().equals("King")) {
 							int kingMoves[][] = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { 1, -1 },
-									{ -1, 1 }, { -1, 1 }, { 0, -2 }, { 0, 2 } };
+									{ -1, 1 }, { -1, -1 }, { 0, -2 }, { 0, 2 } };
 							for (int k = 0; k < kingMoves.length; k++) {
 								int[] destination = { i + kingMoves[k][0], j + kingMoves[k][1] };
 								try {
@@ -709,6 +717,7 @@ public class Chess {
 										} else {
 											reverseMove(origin, destination, piece, target);
 										}
+										piece.setFirstMove(firstMove);
 										return false;
 									}
 								} catch (ArrayIndexOutOfBoundsException e) {
@@ -722,6 +731,7 @@ public class Chess {
 									if (!target.getTeam().equals("white")
 											&& validateMove(origin, destination, "", true)) {
 										reverseMove(origin, destination, piece, target);
+										piece.setFirstMove(firstMove);
 										return false;
 									}
 								} catch (ArrayIndexOutOfBoundsException e) {
@@ -735,6 +745,7 @@ public class Chess {
 			for (int i = 0; i < board.length; i++) {
 				for (int j = 0; j < board[i].length; j++) {
 					Tile piece = board[i][j];
+					boolean firstMove = piece.getFirstMove();
 					if (piece.getTeam().equals("black")) {
 						int[] origin = { i, j };
 						int[][] moves = piece.getMoves();
@@ -747,6 +758,7 @@ public class Chess {
 									if (!target.getTeam().equals("black")
 											&& validateMove(origin, destination, "", false)) {
 										reverseMove(origin, destination, piece, target);
+										piece.setFirstMove(firstMove);
 										return false;
 									}
 								} catch (ArrayIndexOutOfBoundsException e) {
@@ -766,6 +778,7 @@ public class Chess {
 										} else {
 											reverseMove(origin, destination, piece, target);
 										}
+										piece.setFirstMove(firstMove);
 										return false;
 									}
 								} catch (ArrayIndexOutOfBoundsException e) {
@@ -779,6 +792,7 @@ public class Chess {
 									if (!target.getTeam().equals("black")
 											&& validateMove(origin, destination, "", false)) {
 										reverseMove(origin, destination, piece, target);
+										piece.setFirstMove(firstMove);
 										return false;
 									}
 								} catch (ArrayIndexOutOfBoundsException e) {

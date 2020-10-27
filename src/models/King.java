@@ -12,7 +12,7 @@ public class King extends Tile {
 			           {1,1},
 			           {1,-1},
 			           {-1,1},
-			           {-1,1}};
+			           {-1,-1}};
 	
 	public King(String boardName) {
 		super(boardName);
