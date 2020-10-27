@@ -284,6 +284,7 @@ public class Chess {
 					}
 					board[7][3].setFirstMove(false);
 				} else {
+					if(!checkMove(origin, destination, moves)) return false;
 					movePiece(origin, destination, piece, target);
 					if (piece.getTeam().equals("white") && checksOwnKing("white")) {
 						reverseMove(origin, destination, piece, target);
@@ -315,14 +316,15 @@ public class Chess {
 					}
 					board[0][3].setFirstMove(false);
 				} else {
+					if(!checkMove(origin, destination, moves)) return false;
 					movePiece(origin, destination, piece, target); // for now
-
 					if (piece.getTeam().equals("black") && checksOwnKing("black")) {
 						reverseMove(origin, destination, piece, target);
 						return false;
 					}
 				}
 			} else { // normal move
+				if(!checkMove(origin, destination, moves)) return false;
 				movePiece(origin, destination, piece, target);
 				if (piece.getTeam().equals("white") && checksOwnKing("white")) {
 					reverseMove(origin, destination, piece, target);
