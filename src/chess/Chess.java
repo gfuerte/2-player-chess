@@ -1,8 +1,5 @@
 package chess;
 
-import java.awt.desktop.SystemSleepEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 import models.Bishop;
@@ -61,7 +58,6 @@ public class Chess {
 				}
 			} else if (input.length() >= 5) { // normal turn
 				if (checkInput(input) == true) {
-
 					int[] origin = getIndex(input.substring(0, 2));
 					int[] destination = getIndex(input.substring(3, 5));
 
@@ -236,6 +232,7 @@ public class Chess {
 						return false;
 					}
 				} else {
+					if(input.length() == 7 || input.length() == 13) return false;
 					movePiece(origin, destination, piece, target);
 					if (checksOwnKing(piece.getTeam())) {
 						reverseMove(origin, destination, piece, target);
@@ -812,7 +809,7 @@ public class Chess {
 	 * @return boolean Returns true if input if properly formatted, false otherwise.
 	 */
 	public static boolean checkInput(String input) {
-		if (input.length() != 5 && input.length() != 7 && input.length() != 13)
+		if (input.length() != 5 && input.length() != 7 && input.length() != 11 && input.length() != 13)
 			return false;
 		if (input.substring(0, 2).equals(input.substring(3, 5)))
 			return false;
