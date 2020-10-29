@@ -262,6 +262,17 @@ public class Chess {
 			if (piece.getTeam().equals("white") && validCastling()) {
 				// if its King is white and going to right side towards rook
 				if (destination[0] == 7 && destination[1] == 6) {
+					check();
+					if(whiteCheck > 0) return false;
+					
+					int[] temp = {7, 5};
+					movePiece(origin, temp, piece, board[7][5]);
+					check();
+					if(whiteCheck > 0) {
+						reverseMove(origin, temp, piece, board[7][4]);
+						return false;
+					}
+					
 					movePiece(origin, destination, piece, target);
 					board[7][5] = board[7][7];
 					board[7][7] = new Tile();
@@ -273,6 +284,17 @@ public class Chess {
 					}
 					board[7][5].setFirstMove(false);
 				} else if (destination[0] == 7 && destination[1] == 2) { // if king is white and going to left side
+					check();
+					if(whiteCheck > 0) return false;
+					
+					int[] temp = {7, 3};
+					movePiece(origin, temp, piece, board[7][3]);
+					check();
+					if(whiteCheck > 0) {
+						reverseMove(origin, temp, piece, board[7][4]);
+						return false;
+					}
+					
 					movePiece(origin, destination, piece, target);
 					board[7][3] = board[7][0];
 					board[7][0] = new Tile();
@@ -294,6 +316,17 @@ public class Chess {
 			} else if (piece.getTeam().equals("black") && validCastling()) {
 				// if its King is black and going to right side towards rook
 				if (destination[0] == 0 && destination[1] == 6) {
+					check();
+					if(blackCheck > 0) return false;
+					
+					int[] temp = {0, 5};
+					movePiece(origin, temp, piece, board[0][5]);
+					check();
+					if(blackCheck > 0) {
+						reverseMove(origin, temp, piece, board[0][4]);
+						return false;
+					}
+					
 					movePiece(origin, destination, piece, target);
 					board[0][5] = board[0][7];
 					board[0][7] = new Tile();
@@ -305,6 +338,17 @@ public class Chess {
 					}
 					board[0][5].setFirstMove(false);
 				} else if (destination[0] == 0 && destination[1] == 2) { // if king is black and going to left side
+					check();
+					if(blackCheck > 0) return false;
+					
+					int[] temp = {0, 3};
+					movePiece(origin, temp, piece, board[0][3]);
+					check();
+					if(blackCheck > 0) {
+						reverseMove(origin, temp, piece, board[0][4]);
+						return false;
+					}
+					
 					movePiece(origin, destination, piece, target);
 					board[0][3] = board[0][0];
 					board[0][0] = new Tile();
