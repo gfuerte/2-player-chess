@@ -44,6 +44,7 @@ public class Chess {
 			}
 
 			input = scanner.nextLine();
+			System.out.println(input);
 			if (input.equals("resign")) { // resign
 				if (whitesMove) {
 					System.out.println("Black wins");
